@@ -34,13 +34,18 @@ def point_diff_calculator():
             reg_games = 0
             for game in games:
                 if game["game_type"] == "REG" and game["is_d1_opponent"]:
-                    point_diff += int(game["points_for"]) - int(game["points_against"])
+                    game_score = int(game["points_for"]) - int(game["points_against"])
+                    if game["location"] == "":
+                        game_score += 3
+                    elif game["location"] == "@":
+                        game_score -= 3
+                    point_diff += game_score
                     reg_games += 1
             point_diff /= reg_games
             point_diffs[row['Team']] = point_diff
     return point_diffs
 
-def point_diff_score(diffs):
+def normalize(diffs):
     sorted_diffs = rank_teams(diffs)
     worst = sorted_diffs[len(sorted_diffs) - 1][1]
     best = sorted_diffs[0][1]
@@ -65,6 +70,10 @@ def weighted_point_diff_calculator(scores):
                 diff = int(game["points_for"]) - int(game["points_against"])
                 opponent = game["opponent"].split("\xa0", 1)[0]
                 game_score = diff + scores[name_to_slug[opponent]]
+                if game["location"] == "":
+                    game_score += 3
+                elif game["location"] == "@":
+                    game_score -= 3
                 point_diff += game_score
                 reg_games += 1
         point_diff /= reg_games
@@ -103,6 +112,6 @@ weighted = []
 for _ in range(10):
     weighted = weighted_point_diff_calculator(p_diffs)
     p_diffs = weighted
-weighted_ranking = point_diff_score(weighted)
+weighted_ranking = normalize(weighted)
 print_ranking(weighted_ranking)
 test_model(p_diffs)
